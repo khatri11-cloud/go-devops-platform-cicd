@@ -32,17 +32,21 @@ jobs:
           username: ${{ secrets.ACR_USERNAME }}
           password: ${{ secrets.ACR_PASSWORD }}
 
-      - name: Build Docker Images
-        run: |
-          docker build \
-            -t ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
-            -t ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest \
-            ./app
+      # Set up Docker Buildx to enable advanced caching and BuildKit features
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Push Docker Images
-        run: |
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+      # Combined build, tag, and push using Buildx
+      - name: Build and Push Docker Images
+        uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          push: true
+          tags: |
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Delete Existing Azure Container Instance
         run: |
@@ -68,14 +72,25 @@ jobs:
             --location ${{ vars.AZURE_LOCATION }} \
             --environment-variables APP_VERSION=${{ env.IMAGE_TAG }}
 
-      - name: Wait for Container to Become Ready
+      # Fixed indentation error from original script
+      - name: Wait for Application Health
         run: |
-          echo "Waiting for Azure Container Instance..."
-          sleep 30
-
-      - name: Verify Deployment
-        run: |
-          curl --fail http://${{ vars.AZURE_DNS_LABEL }}.${{ vars.AZURE_LOCATION }}.azurecontainer.io:8080/health
+          URL="http://${{ vars.AZURE_DNS_LABEL }}.${{ vars.AZURE_LOCATION }}.azurecontainer.io:8080/health"
+          
+          echo "Waiting for application to become healthy..."
+          
+          for i in {1..24}; do
+            if curl --silent --fail "$URL" > /dev/null; then
+              echo "Application is healthy."
+              exit 0
+            fi
+            
+            echo "Attempt $i/24 - Application not ready yet..."
+            sleep 5
+          done
+          
+          echo "Deployment failed: Application never became healthy."
+          exit 1
 
       - name: Deployment Summary
         run: |
