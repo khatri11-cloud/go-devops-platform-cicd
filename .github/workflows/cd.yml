@@ -38,3 +38,34 @@ jobs:
         run: |
           docker push \
             ${{ secrets.ACR_LOGIN_SERVER }}/devops-platform:latest
+
+      - name: Delete Existing Azure Container Instance
+        run: |
+          az container delete \
+            --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
+            --name ${{ vars.AZURE_CONTAINER_NAME }} \
+            --yes
+
+      - name: Create Azure Container Instance
+        run: |
+          az container create \
+            --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
+            --name ${{ vars.AZURE_CONTAINER_NAME }} \
+            --image ${{ secrets.ACR_LOGIN_SERVER }}/devops-platform:latest \
+            --registry-login-server ${{ secrets.ACR_LOGIN_SERVER }} \
+            --registry-username ${{ secrets.ACR_USERNAME }} \
+            --registry-password ${{ secrets.ACR_PASSWORD }} \
+            --dns-name-label ${{ vars.AZURE_DNS_LABEL }} \
+            --ports 8080 \
+            --cpu 1 \
+            --memory 1 \
+            --os-type Linux \
+            --location ${{ vars.AZURE_LOCATION }} \
+            --environment-variables APP_VERSION=1.0.0
+
+      - name: Wait for Container to Start
+        run: sleep 30
+
+      - name: Verify Deployment
+        run: |
+          curl --fail http://${{ vars.AZURE_DNS_LABEL }}.${{ vars.AZURE_LOCATION }}.azurecontainer.io:8080/health
