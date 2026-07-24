@@ -37,7 +37,7 @@ resource "azurerm_container_group" "app" {
     }
 
     environment_variables = {
-      APP_VERSION = "1.0.0"
+      APP_VERSION = var.app_version
     }
   }
 

@@ -14,3 +14,9 @@ variable "acr_name" {
   description = "Azure Container Registry name"
   type        = string
 }
+
+variable "app_version"{
+  type = string
+  default ="latest"
+}
+
