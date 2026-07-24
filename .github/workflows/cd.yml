@@ -98,3 +98,19 @@ jobs:
           echo "Image: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
           echo "Application URL:"
           echo "http://${{ vars.AZURE_DNS_LABEL }}.${{ vars.AZURE_LOCATION }}.azurecontainer.io:8080"
+
+      - name: Deployment Summary
+        run: |
+          {
+            echo "## Deployment Successful"
+            echo ""
+            echo "| Item | Value |"
+          } >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|"
+          echo "| Repository | ${{ github.repository }} |"
+          echo "| Branch | ${{ github.ref_name }} |"
+          echo "| Commit | ${{ github.sha }} |"
+          echo "| Image | ${{ secrets.ACR_LOGIN_SERVER }}/devops-platform:${{ env.IMAGE_TAG }} |"
+          echo "| Environment | Azure Container Instance |"
+          echo "| URL | http://${{ vars.AZURE_DNS_LABEL }}.${{ vars.AZURE_LOCATION }}.azurecontainer.io:8080 |"
+           } >> $GITHUB_STEP_SUMMARY
