@@ -105,12 +105,13 @@ jobs:
             echo "## Deployment Successful"
             echo ""
             echo "| Item | Value |"
+            echo "|------|-------|"
+            echo "| Repository | ${{ github.repository }} |"
+            echo "| Branch | ${{ github.ref_name }} |"
+            echo "| Commit | ${{ github.sha }} |"
+            echo "| Image | ${{ vars.AZURE_ACR_NAME }}.azurecr.io/devops-platform:${{ env.IMAGE_TAG }} |"
+            echo "| Environment | Azure Container Instance |"
+            echo "| URL | http://${{ vars.AZURE_DNS_LABEL }}.${{ vars.AZURE_LOCATION }}.azurecontainer.io:8080 |"
           } >> $GITHUB_STEP_SUMMARY
-          echo "|------|-------|"
-          echo "| Repository | ${{ github.repository }} |"
-          echo "| Branch | ${{ github.ref_name }} |"
-          echo "| Commit | ${{ github.sha }} |"
-          echo "| Image | ${{ vars.AZURE_ACR_NAME }}.azurecr.io/devops-platform:${{ env.IMAGE_TAG }} |"
-          echo "| Environment | Azure Container Instance |"
-          echo "| URL | http://${{ vars.AZURE_DNS_LABEL }}.${{ vars.AZURE_LOCATION }}.azurecontainer.io:8080 |"
-          } >> $GITHUB_STEP_SUMMARY
+
+          
